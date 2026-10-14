@@ -38,7 +38,7 @@ jobs:
             dist/*.exe
             dist/**/*.exe
           if-no-files-found: error
-
+          
           name: Windows-Installer
           path: dist/*.exe
           if-no-files-found: error
