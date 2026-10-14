@@ -1,0 +1,24 @@
+{
+  "name": "daftar-income-expenses-desktop",
+  "version": "1.0.0",
+  "description": "Offline-first desktop wrapper for Daftar Income and Expenses",
+  "main": "main.js",
+  "author": "osama almaliki",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.osamaalmaliki.daftaraccounts",
+    "productName": "دفتر الإيرادات والمصروفات",
+    "files": ["index.html", "main.js", "package.json"],
+    "directories": { "output": "release" },
+    "win": { "target": "nsis", "artifactName": "Daftar-Accounts-Setup-${version}.${ext}" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "createStartMenuShortcut": true }
+  }
+}

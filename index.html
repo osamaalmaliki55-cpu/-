@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>دفتر الإيرادات والمصروفات</title>
+<style>
+:root{--navy:#10243a;--blue:#1769aa;--blue2:#eaf3fb;--bg:#f3f6fa;--ink:#1d2b3a;--muted:#6c7a89;--green:#13845b;--red:#c44444;--line:#dce4ed;--white:#fff}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#edf3f9 0,#f6f8fb 260px);font-family:"Segoe UI",Tahoma,Arial,sans-serif;color:var(--ink);font-size:13px;line-height:1.5}
+header{background:linear-gradient(120deg,#0d2035 0%,#143d62 58%,#1769aa 100%);color:white;padding:20px max(22px,calc((100% - 1260px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;box-shadow:0 8px 24px #10243a20}
+header h1{font-size:22px;letter-spacing:-.3px;margin:0 0 5px}header p{margin:0;color:#d9e9f7;font-size:12px}
+.wrap{max-width:1300px;margin:22px auto;padding:0 16px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+button,.button{border:0;border-radius:8px;padding:9px 14px;font:inherit;cursor:pointer;background:linear-gradient(135deg,#1769aa,#15558b);color:white;font-weight:650;box-shadow:0 2px 5px #124b7814;transition:transform .15s,box-shadow .15s}
+button.secondary{background:white;color:var(--navy);border:1px solid var(--line)}button.danger{background:#fff0f0;color:var(--red);border:1px solid #f1caca}
+button:hover{filter:brightness(.96)}.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.card{background:linear-gradient(145deg,#fff,#fafdff);border:1px solid #dbe5ef;border-radius:13px;padding:16px;box-shadow:0 5px 16px #15283a08;position:relative;overflow:hidden}.card:before{content:"";position:absolute;right:0;top:0;bottom:0;width:4px;background:#1769aa}.card:nth-child(2):before{background:#c44444}.card:nth-child(3):before{background:#13845b}.card:nth-child(4):before{background:#7b8ca1}
+.card .label{color:var(--muted);font-size:12px;margin-bottom:9px}.amount{font-size:23px;font-weight:750;direction:ltr;text-align:right;font-variant-numeric:tabular-nums}
+.green{color:var(--green)}.red{color:var(--red)}.blue{color:var(--blue)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start}
+.entry-panel{width:100%}
+.entry-panel #entryForm{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:0 14px;align-items:start}
+.entry-panel #entryForm>.transaction-type-field{grid-column:span 3}
+.entry-panel #entryForm>.items-section{grid-column:1/-1}
+.entry-panel #entryForm>.field:has(#category){grid-column:span 4}
+.entry-panel #entryForm>.field:has(#payment){grid-column:span 4}
+.entry-panel #entryForm>.field:has(#notes){grid-column:span 4}
+.entry-panel #entryForm>.form-actions{grid-column:1/-1}
+.entry-panel .items-section .item-row{grid-template-columns:minmax(180px,1fr) 105px 145px 92px 30px;gap:6px}
+.entry-panel .items-section .item-head{grid-template-columns:minmax(180px,1fr) 105px 145px 92px 30px;gap:6px}
+.panel{background:white;border:1px solid #dce5ee;border-radius:13px;overflow:hidden;margin-bottom:15px;box-shadow:0 5px 18px #142d4510}
+.panel h2{font-size:14px;margin:0;padding:14px 16px;background:linear-gradient(90deg,#f3f8fd,#fbfdff);border-bottom:1px solid #dce5ee;color:#183c5d;font-weight:750}
+.panel-body{padding:15px}
+label{display:block;font-size:12px;font-weight:700;margin:0 0 6px;color:#344f68}
+input,select,textarea{width:100%;border:1px solid #cbd8e5;border-radius:8px;padding:9px 10px;font:inherit;background:#fff;color:var(--ink);outline:none;min-width:0;transition:border-color .15s,box-shadow .15s}
+
+/* Refined transaction-entry panel */
+.entry-panel{border:1px solid #d5e2ee;box-shadow:0 10px 28px #10243a12}
+.entry-panel>h2{display:flex;align-items:center;gap:9px;background:linear-gradient(115deg,#eaf3fb,#f9fcff);font-size:15px;padding:15px 17px}
+.entry-panel .panel-body{padding:17px}
+.entry-panel .field{margin-bottom:14px}
+.entry-panel .field>label{font-size:12px;color:#294861;margin-bottom:7px}
+.entry-panel input:not([type=hidden]),.entry-panel select,.entry-panel textarea{border:1px solid #c7d6e5;border-radius:9px;min-height:40px;padding:9px 11px;background:#fbfdff;font-size:13px;box-shadow:inset 0 1px 2px #183d5d06}
+.entry-panel input:not([type=hidden]):hover,.entry-panel select:hover,.entry-panel textarea:hover{border-color:#9fb8cf;background:#fff}
+.entry-panel input:focus,.entry-panel select:focus,.entry-panel textarea:focus{background:#fff;border-color:#287bb4;box-shadow:0 0 0 3px #287bb41a}
+.entry-panel #type{font-weight:700}
+.entry-panel .grid2{gap:12px}
+.entry-panel .form-actions{margin-top:17px;gap:9px}
+.entry-panel .form-actions button{min-height:42px;border-radius:9px}
+.entry-panel .form-actions button[type=submit]{flex:1.4}
+.entry-panel .form-actions .secondary{background:#f2f6fa;border-color:#d5e0eb;color:#304c65}
+.items-section{padding:13px;background:#f8fbfe;border:1px solid #e0e9f2;border-radius:12px;margin:4px 0 15px!important}
+.items-section>label{font-size:13px!important;color:#173e60!important;margin-bottom:10px!important}
+.items-section .item-head{padding:0 3px}
+.items-section #itemsList{display:flex;flex-direction:column;gap:2px}
+.items-section .item-row{background:#fff;border-color:#d9e5ef;box-shadow:0 2px 6px #153b5c08}
+.items-section>button{width:100%;min-height:38px;border:1px dashed #8eb4d3!important;background:#eef6fd!important;color:#145b91!important;box-shadow:none!important}
+.items-section>button:hover{background:#e3f0fb!important}
+.items-total-bar{box-shadow:inset 0 1px 0 #fff}
+.items-total-bar strong:first-child{color:#244862;font-size:12px}
+.items-total-bar strong:last-child{font-size:16px;color:#155b91;font-variant-numeric:tabular-nums}
+.entry-panel .note{background:#f6f8fb;border-radius:8px;padding:9px 10px;border:1px solid #e6edf4}
+@media(max-width:850px){.entry-panel .panel-body{padding:13px}}
+@media(max-width:600px){.entry-panel #entryForm{display:block}.entry-panel #entryForm>.field,.entry-panel #entryForm>.items-section,.entry-panel #entryForm>.form-actions{grid-column:auto}.entry-panel .items-section .item-row{grid-template-columns:minmax(0,1fr) 100px}.entry-panel .items-section .item-head{grid-template-columns:minmax(0,1fr) 100px}}
+@media(max-width:480px){.entry-panel .grid2{grid-template-columns:1fr;gap:0}.items-section{padding:9px}.entry-panel .panel-body{padding:11px}}
+
+.item-head{display:grid;grid-template-columns:minmax(0,1fr) 100px 135px 95px 28px;gap:6px;margin:0 0 7px;padding:0 3px;color:#49627a;font-size:11px;font-weight:800;direction:rtl}
+.item-head span{display:block;text-align:right;min-width:0;overflow:hidden}
+.item-row{display:grid;grid-template-columns:minmax(0,1fr) 100px 135px 95px 28px;gap:6px;align-items:center;margin-bottom:9px;padding:8px;background:linear-gradient(120deg,#f8fbff,#f3f8fd);border:1px solid #dce7f1;border-radius:10px;box-shadow:0 2px 5px #183d5d08;direction:rtl;min-width:0}
+.item-row>*{min-width:0}
+.items-section{min-width:0;overflow-x:auto}
+#itemsList{min-width:620px;width:100%}
+.entry-panel .items-section .item-head{min-width:620px}
+.entry-panel .items-section .item-row{min-width:620px;padding:5px 7px;margin-bottom:4px;border-radius:7px}
+.entry-panel .items-section .item-row input,.entry-panel .items-section .item-row select{height:32px;min-height:32px;padding:4px 7px;font-size:12px;border-radius:6px}
+.entry-panel .items-section .item-row button{height:30px;font-size:16px}
+.item-row input{display:block;width:100%;min-width:0;height:40px;min-height:40px;box-sizing:border-box;margin:0;padding:8px 9px;background:#fff;border:1px solid #cbd8e5;border-radius:7px;font:inherit;font-size:12px;line-height:22px}
+.item-row .item-name{direction:rtl;text-align:right}
+.item-row .item-amount{direction:ltr;text-align:left;font-variant-numeric:tabular-nums}
+.item-row .item-date{direction:ltr;text-align:left;appearance:auto;-webkit-appearance:auto;padding:7px 6px;font-size:12px}
+.item-row .item-name{display:block;visibility:visible;opacity:1;min-width:0}
+.item-row .item-amount{text-align:left;direction:ltr;font-variant-numeric:tabular-nums}
+.item-row .item-date{direction:ltr}
+.item-row button{height:36px;padding:0;background:#fff0f0;color:var(--red);border:1px solid #f1caca;border-radius:6px;font-size:18px;line-height:1}
+.item-row input:focus{border-color:#2684c7;box-shadow:0 0 0 3px #2684c71c}
+@media(max-width:1000px) and (min-width:601px){.item-head,.item-row{grid-template-columns:minmax(70px,1fr) 82px 118px 28px;gap:5px}.item-row{padding:7px}.item-row input{padding:7px 5px;font-size:11px}.item-row .item-date{font-size:10px;padding:6px 3px}}
+@media(max-width:600px){.entry-panel .items-section .item-row,.entry-panel .items-section .item-head{grid-template-columns:minmax(180px,1fr) 95px 135px 82px 28px;min-width:620px;gap:5px}.wrap{margin:14px auto;padding:0 10px}.panel-body{padding:12px}.panel h2{padding:12px 13px}.toolbar button{flex:1}}
+@media print{body{background:#fff}header{box-shadow:none}.card,.panel{box-shadow:none}}
+input:focus,select:focus,textarea:focus{border-color:#2684c7;box-shadow:0 0 0 3px #2684c71c;background:#fcfeff}
+button:hover{transform:translateY(-1px);box-shadow:0 4px 10px #124b7820}
+.field{margin-bottom:11px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.form-actions{display:flex;gap:8px;flex-wrap:wrap}.form-actions button{flex:1}
+.filters{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:9px;padding:12px;border-bottom:1px solid var(--line)}
+.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:720px}th,td{padding:10px 11px;text-align:right;border-bottom:1px solid #e8edf3;white-space:nowrap}
+th{font-size:12px;color:#4c6073;background:#fbfcfe;position:sticky;top:0}td{font-size:13px}tbody tr:hover{background:#f8fbff}.item-stack{display:flex;flex-direction:column;gap:7px;min-width:220px}.item-line{display:flex;align-items:center;gap:6px;line-height:1.5;white-space:normal}.item-amount-stack{display:flex;flex-direction:column;gap:7px;text-align:right}.item-total{border-top:1px solid #dce4ed;padding-top:7px;margin-top:2px;font-weight:800}.transaction-row td{vertical-align:middle}.transaction-row{break-inside:avoid}
+.pill{display:inline-block;padding:4px 8px;border-radius:20px;font-size:11px;font-weight:700}.income{background:#e3f6ed;color:#08764b}.expense{background:#fff0ed;color:#b63c30}
+.actions{display:flex;gap:5px}.actions button{padding:5px 8px;font-size:11px}.empty{text-align:center;padding:30px;color:var(--muted)}
+.note{font-size:12px;color:var(--muted);line-height:1.7;margin-top:10px}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:14px}
+@media(max-width:850px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:1fr 1fr}.filters .wide{grid-column:1/-1}.entry-panel #entryForm{grid-template-columns:repeat(6,minmax(0,1fr));gap:0 10px}.entry-panel #entryForm>.transaction-type-field{grid-column:span 3}.entry-panel #entryForm>.field:has(#category),.entry-panel #entryForm>.field:has(#payment),.entry-panel #entryForm>.field:has(#notes){grid-column:span 2}.entry-panel .items-section .item-row{grid-template-columns:minmax(0,1fr) 110px 140px 30px}.entry-panel .items-section .item-head{grid-template-columns:minmax(0,1fr) 110px 140px 30px}}
+@media(max-width:480px){header{padding:15px}.cards{gap:8px}.card{padding:11px}.amount{font-size:19px}.grid2{grid-template-columns:1fr}.filters{grid-template-columns:1fr}}
+@media print{body{background:white;font-size:11px}header{background:white!important;color:#111;padding:8px 0;border-bottom:2px solid #222}header p{color:#333}.wrap{margin:0;max-width:none;padding:0}.toolbar,.entry-panel,.filters,.actions,footer,.no-print{display:none!important}.cards{grid-template-columns:repeat(4,1fr);gap:6px}.card{box-shadow:none;padding:8px}.amount{font-size:16px}.layout{display:block}.panel{border:0}.panel h2{background:white;padding:8px 0}.panel-body{padding:0}table{min-width:0}th,td{padding:6px 5px;font-size:10px;white-space:normal}thead{display:table-header-group}tr{break-inside:avoid}}
+
+/* Per-line date and type layout */
+.item-line{gap:8px;flex-wrap:wrap}
+.line-date{font-size:11px;color:#718096;white-space:nowrap}
+.line-desc{flex:1;min-width:70px;white-space:normal}
+.line-amount{direction:ltr;white-space:nowrap;font-variant-numeric:tabular-nums}
+.item-row .item-type{height:30px;min-height:30px;padding:4px 5px;font-size:11px}
+.item-head{grid-template-columns:minmax(0,1fr) 100px 135px 95px 28px!important}
+@media(max-width:850px){.entry-panel .items-section .item-row,.entry-panel .items-section .item-head{grid-template-columns:minmax(0,1fr) 90px 125px 82px 28px}}
+@media(max-width:600px){.entry-panel .items-section .item-head{grid-template-columns:minmax(0,1fr) 90px!important}.entry-panel .items-section .item-head span:nth-child(n+3){display:none}.entry-panel .items-section .item-row{grid-template-columns:minmax(0,1fr) 85px 95px 28px}.entry-panel .items-section .item-row .item-name{grid-column:1/-1}.entry-panel .items-section .item-row .item-amount{grid-column:1/2;grid-row:2/3}.entry-panel .items-section .item-row .item-date{grid-column:2/3;grid-row:2/3}.entry-panel .items-section .item-row .item-type{grid-column:3/4;grid-row:2/3}.entry-panel .items-section .item-row button{grid-column:4/5;grid-row:2/3}}
+/* Compact desktop-first transaction form */
+.entry-panel .panel-body{padding:12px 14px}
+.entry-panel .field{margin-bottom:8px}
+.entry-panel .field>label{font-size:11px;margin-bottom:4px}
+.entry-panel input:not([type=hidden]),.entry-panel select,.entry-panel textarea{min-height:32px;height:32px;padding:5px 8px;border-radius:6px;font-size:12px;line-height:1.25}
+.entry-panel textarea{height:auto;min-height:52px;resize:vertical}
+.entry-panel #entryForm{gap:0 10px}
+.entry-panel .form-actions{margin-top:8px;gap:7px}
+.entry-panel .form-actions button{min-height:34px;padding:7px 12px;border-radius:7px;font-size:12px}
+.entry-panel .items-section{padding:9px 10px;margin:2px 0 9px!important;border-radius:9px}
+.entry-panel .items-section>label{font-size:12px!important;margin-bottom:7px!important}
+.entry-panel .items-section .item-head{font-size:10px;margin-bottom:4px;gap:6px}
+.entry-panel .items-section .item-row{grid-template-columns:minmax(0,1fr) 120px 145px 28px;gap:6px;padding:6px;margin-bottom:5px;border-radius:7px}
+.entry-panel .items-section .item-row input{height:30px;min-height:30px;padding:4px 7px;font-size:11px;border-radius:5px}
+.entry-panel .items-section .item-row button{height:28px;padding:0;font-size:15px;border-radius:5px}
+.entry-panel .items-section>button{min-height:30px;padding:5px 10px;font-size:11px;border-radius:6px}
+.entry-panel .items-total-bar{margin-top:6px!important;padding:7px 10px!important;border-radius:7px!important}
+.entry-panel .items-total-bar strong:first-child{font-size:11px}
+.entry-panel .items-total-bar strong:last-child{font-size:13px}
+.entry-panel .note{margin-top:7px;padding:6px 8px;font-size:10px;line-height:1.5}
+@media(max-width:850px){
+ .entry-panel .items-section .item-row{grid-template-columns:minmax(0,1fr) 90px 125px 82px 28px}
+ .entry-panel .items-section .item-head{grid-template-columns:minmax(0,1fr) 90px 125px 82px 28px}
+}
+@media(max-width:600px){
+ .entry-panel .panel-body{padding:10px}
+ .entry-panel input:not([type=hidden]),.entry-panel select{height:35px;min-height:35px}
+ .entry-panel .items-section .item-row{grid-template-columns:minmax(0,1fr) 95px;gap:6px;padding:7px}
+ .entry-panel .items-section .item-row .item-name{grid-column:1/-1}
+ .entry-panel .items-section .item-row .item-amount{grid-column:1/2}
+  .entry-panel .items-section .item-row .item-date{display:block;grid-column:2/3;grid-row:2/3}
+ .entry-panel .items-section .item-row .item-type{grid-column:3/4;grid-row:2/3}
+ .entry-panel .items-section .item-row button{grid-column:4/5;grid-row:2/3;width:100%;height:26px}
+}
+
+
+/* Final compact styling for every control in "بنود العملية" */
+.entry-panel .items-section{padding:7px 8px!important;margin:2px 0 7px!important}
+.entry-panel .items-section>label{font-size:11px!important;margin-bottom:5px!important}
+.entry-panel .items-section .item-head{gap:5px!important;font-size:10px!important;margin-bottom:3px!important;padding:0 2px!important}
+.entry-panel .items-section .item-row{gap:5px!important;padding:5px!important;margin-bottom:4px!important;border-radius:6px!important;align-items:center}
+.entry-panel .items-section .item-row input,
+.entry-panel .items-section .item-row select{width:100%!important;min-width:0!important;height:27px!important;min-height:27px!important;padding:3px 5px!important;font-size:10px!important;line-height:1.2!important;border-radius:4px!important}
+.entry-panel .items-section .item-row .item-date{font-size:10px!important;padding:2px 3px!important}
+.entry-panel .items-section .item-row .item-type{height:27px!important;min-height:27px!important;padding:2px 3px!important;font-size:10px!important}
+.entry-panel .items-section .item-row button{height:25px!important;min-height:25px!important;width:25px!important;padding:0!important;font-size:14px!important;border-radius:4px!important}
+.entry-panel .items-section>button{height:27px!important;min-height:27px!important;padding:3px 8px!important;font-size:10px!important}
+.entry-panel .items-section .items-total-bar{margin-top:4px!important;padding:5px 8px!important;font-size:11px!important}
+@media(max-width:850px){
+ .entry-panel .items-section .item-row,.entry-panel .items-section .item-head{gap:4px!important}
+ .entry-panel .items-section .item-row input,.entry-panel .items-section .item-row select{font-size:10px!important;padding:3px!important}
+}
+@media(max-width:600px){
+ .entry-panel .items-section{padding:6px!important}
+ .entry-panel .items-section .item-row{padding:5px!important;gap:4px!important}
+ .entry-panel .items-section .item-row input,.entry-panel .items-section .item-row select{height:27px!important;min-height:27px!important}
+}
+
+/* وحدة وكمية وسعر اختياري */
+.entry-panel .items-section .item-head,.entry-panel .items-section .item-row{grid-template-columns:minmax(170px,1.5fr) 90px 75px 105px 130px 85px 28px!important;gap:5px!important;min-width:760px!important}
+.item-row .item-unit,.item-row .item-qty{width:100%;min-width:0;height:32px;min-height:32px;padding:4px 5px;font-size:11px;border:1px solid #cbd8e5;border-radius:6px;background:#fff}
+.item-row .item-qty{direction:ltr;text-align:left}.item-row .item-unit{direction:rtl}
+.item-head span{font-size:11px;white-space:nowrap;text-align:center}
+@media(max-width:600px){.entry-panel .items-section .item-head,.entry-panel .items-section .item-row{grid-template-columns:minmax(170px,1.5fr) 90px 75px 100px 125px 80px 28px!important;min-width:750px!important}}
+
+</style>
+
+<style id="single-line-items-fix">
+/* Keep each transaction item on one horizontal line on desktop and mobile */
+.entry-panel .items-section{overflow-x:auto!important;min-width:0!important}
+.entry-panel .items-section .item-head,
+.entry-panel .items-section .item-row{
+  display:grid!important;
+  direction:rtl!important;
+  grid-template-columns:minmax(240px,1fr) 120px 150px 105px 30px!important;
+  align-items:center!important;
+  gap:7px!important;
+  min-width:700px!important;
+  box-sizing:border-box!important;
+}
+.entry-panel .items-section .item-row{padding:6px 8px!important;margin:0 0 5px!important}
+.entry-panel .items-section .item-row .item-name,
+.entry-panel .items-section .item-row .item-amount,
+.entry-panel .items-section .item-row .item-date,
+.entry-panel .items-section .item-row .item-type{
+  display:block!important;visibility:visible!important;opacity:1!important;
+  grid-column:auto!important;grid-row:auto!important;width:100%!important;
+  min-width:0!important;height:32px!important;min-height:32px!important;
+  box-sizing:border-box!important;
+}
+.entry-panel .items-section .item-row .item-type{
+  font-weight:800!important;border-width:1px!important;
+}
+.entry-panel .items-section .item-row .item-type option[value="income"]{color:#13845b}
+.entry-panel .items-section .item-row .item-type option[value="expense"]{color:#c43d4b}
+.entry-panel .items-section .item-row button{
+  display:block!important;grid-column:auto!important;grid-row:auto!important;
+  width:30px!important;height:30px!important;min-height:30px!important;
+  padding:0!important;margin:0!important;justify-self:center!important;
+}
+.entry-panel .items-section .item-head span{white-space:nowrap!important;text-align:right!important}
+@media(max-width:600px){
+ .entry-panel .items-section .item-head,
+ .entry-panel .items-section .item-row{
+  grid-template-columns:minmax(220px,1fr) 105px 140px 95px 28px!important;
+  min-width:650px!important;gap:5px!important;
+ }
+ .entry-panel .items-section .item-row .item-name,
+ .entry-panel .items-section .item-row .item-amount,
+ .entry-panel .items-section .item-row .item-date,
+ .entry-panel .items-section .item-row .item-type{height:29px!important;min-height:29px!important;font-size:11px!important}
+ .entry-panel .items-section .item-row button{width:27px!important;height:27px!important;min-height:27px!important}
+}
+</style>
+\n
+
+<style id="unit-total-layout-fix">
+.entry-panel .items-section .item-head,.entry-panel .items-section .item-row{grid-template-columns:minmax(170px,1.5fr) 82px 75px 95px 95px 125px 78px 26px!important;min-width:850px!important;gap:5px!important}
+.item-row .item-line-total{width:100%;min-width:0;height:30px;min-height:30px;box-sizing:border-box;padding:4px 5px;border:1px solid #b8d8c6;border-radius:5px;background:#eef9f2;color:#147447;font-size:11px;font-weight:700;text-align:left;direction:ltr}
+.item-row .item-line-total:placeholder-shown{background:#f7f9fb}
+@media(max-width:600px){.entry-panel .items-section .item-head,.entry-panel .items-section .item-row{grid-template-columns:minmax(170px,1.5fr) 82px 75px 90px 90px 120px 75px 26px!important;min-width:830px!important}}
+</style>
+</head>
+<body>
+<header>
+ <div><h1>دفتر الإيرادات والمصروفات</h1><p>نظام حسابات مصمم من osama almaliki</p></div>
+ <div class="no-print" style="font-size:12px;color:#e5f1fb">العملة: EGP · الجنيه المصري</div>
+</header>
+<div class="wrap">
+ <div class="toolbar no-print">
+  <button type="button" id="googleLoginBtn" onclick="googleLogin()">تسجيل الدخول بحساب Google للمزامنة</button>
+  <button type="button" class="secondary" id="googleLogoutBtn" onclick="googleLogout()" style="display:none">تسجيل الخروج</button>
+  <span id="syncStatus" role="status" style="align-self:center;padding:7px 10px;border-radius:8px;background:#fff;border:1px solid #dce4ed;color:#52677d;font-size:12px">البيانات محفوظة محليًا</span>
+  <button onclick="printReport()">طباعة التقرير / حفظ PDF</button>
+  <button class="secondary" onclick="exportBackup()">تصدير نسخة احتياطية</button>
+  <button class="secondary" onclick="document.getElementById('restoreFile').click()">استعادة نسخة احتياطية</button>
+  <input id="restoreFile" type="file" accept=".json,application/json" hidden onchange="restoreBackup(event)">
+  <button class="secondary" onclick="exportCSV()">تصدير Excel / CSV</button>
+ </div>
+ <section class="cards">
+  <div class="card"><div class="label">إجمالي الإيرادات</div><div class="amount green" id="totalIncome">0.00 EGP</div></div>
+  <div class="card"><div class="label">إجمالي المصروفات</div><div class="amount red" id="totalExpense">0.00 EGP</div></div>
+  <div class="card"><div class="label">صافي الرصيد</div><div class="amount blue" id="netBalance">0.00 EGP</div></div>
+  <div class="card"><div class="label">عدد العمليات</div><div class="amount" id="operationCount">0</div></div>
+ </section>
+ <div class="layout">
+  <section class="panel entry-panel">
+   <h2 id="formTitle">إضافة عملية جديدة</h2>
+   <div class="panel-body">
+    <form id="entryForm">
+     <input type="hidden" id="editId">
+     <input id="date" type="hidden">
+     <input id="description" type="hidden">
+     <div class="field items-section">
+      <label>بنود العملية *</label>
+      <div class="item-head" aria-hidden="true"><span>البيان</span><span>الوحدة (اختياري)</span><span>الكمية</span><span>سعر الوحدة (EGP)</span><span>الإجمالي (EGP)</span><span>التاريخ</span><span>النوع</span><span></span></div>
+      <div id="itemsList"></div>
+      <button type="button" class="secondary" style="margin-top:7px" onclick="addItem()">+ إضافة بند</button>
+      <div class="items-total-bar" style="margin-top:10px;padding:12px 13px;background:linear-gradient(110deg,#eaf4fd,#f5faff);border:1px solid #d6e8f8;border-radius:9px;display:flex;justify-content:space-between;align-items:center">
+       <strong>إجمالي العملية</strong><strong dir="ltr" id="itemsTotal">0.00 EGP</strong>
+      </div>
+     </div>
+     <div class="field"><label for="category">التصنيف</label><select id="category"><option>عام</option><option>مبيعات</option><option>إيجارات</option><option>خدمات</option><option>رواتب</option><option>مشتريات</option><option>صيانة</option><option>مرافق</option><option>نقل</option><option>أخرى</option></select></div>
+     <div class="field"><label for="payment">طريقة الدفع</label><select id="payment"><option>نقدي</option><option>تحويل بنكي</option><option>محفظة إلكترونية</option><option>بطاقة</option><option>آجل</option><option>أخرى</option></select></div>
+     <div class="field"><label for="notes">ملاحظات (اختياري)</label><textarea id="notes" rows="2" maxlength="500" placeholder="أي تفاصيل إضافية"></textarea></div>
+     <div class="form-actions"><button type="submit" id="saveBtn">حفظ العملية</button><button type="button" class="secondary" onclick="resetForm()">إلغاء</button></div>
+    </form>
+    <p class="note">يمكنك إضافة عدة بنود في العملية الواحدة. تُحفظ البيانات محليًا، وبعد تسجيل الدخول بحساب Google تتم مزامنتها عبر الإنترنت مع أجهزتك الأخرى. احتفظ بنسخة JSON احتياطية بانتظام.</p>
+   </div>
+  </section>
+  <section class="panel">
+   <h2 style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">سجل العمليات</span><div class="no-print" style="display:inline-flex;gap:6px;flex-wrap:wrap"><button type="button" class="secondary" onclick="toggleLedgerArchive()">📚 أرشيف السجلات</button><button type="button" class="secondary" onclick="startNewLedger()">＋ سجل عمليات جديد وترحيل الرصيد</button></div><input id="ledgerLabelInput" type="hidden"><input id="ledgerNumberInput" type="hidden"></h2>
+   <div id="ledgerArchivePanel" class="no-print" style="display:none;margin:8px 0;padding:9px;border:1px solid #cbd8e5;border-radius:9px;background:#f7faff">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;margin-bottom:7px"><strong style="font-size:13px;color:#18324b">📚 أرشيف السجلات المحفوظة</strong><span id="archiveCount" style="font-size:12px;color:#52677d">0 سجل</span></div>
+    <input id="archiveSearch" type="search" placeholder="ابحث برقم السجل أو الاسم أو التاريخ..." aria-label="البحث في أرشيف السجلات" style="width:100%;margin-bottom:7px;padding:7px 9px;font-size:12px;min-height:32px">
+    <div id="ledgerArchiveList" style="display:grid;gap:5px"></div>
+   </div>
+   <div class="filters no-print">
+    <div><label for="monthFilter">الشهر</label><input type="month" id="monthFilter"></div>
+    <div><label for="typeFilter">نوع العملية</label><select id="typeFilter"><option value="all">الكل</option><option value="income">الإيرادات</option><option value="expense">المصروفات</option></select></div>
+    <div class="wide"><label for="search">بحث في البيان أو التصنيف</label><input id="search" placeholder="اكتب كلمة للبحث"></div>
+   </div>
+   <div class="tablewrap">
+    <table><thead><tr><th>النوع</th><th>البيان</th><th>التصنيف</th><th>المبلغ (EGP)</th><th class="no-print">إجراءات</th></tr></thead><tbody id="records"></tbody></table>
+    <div id="empty" class="empty">لا توجد عمليات مطابقة. أضف عملية جديدة من النموذج.</div>
+   </div>
+   <div class="panel-body" style="border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-weight:700">
+    <span>إيرادات النتائج: <b class="green" id="filteredIncome">0.00</b> EGP</span><span>مصروفات النتائج: <b class="red" id="filteredExpense">0.00</b> EGP</span>
+   </div>
+  </section>
+ </div>
+ <footer>دفتر الإيرادات والمصروفات · يعمل محليًا على جهازك</footer>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script>
+'use strict';
+const KEY='offline_income_expense_v1';
+const LEDGERS_KEY='offline_income_expense_ledgers_v1';
+const CURRENT_LEDGER_KEY='offline_income_expense_current_ledger_no_v1';
+const CURRENT_LEDGER_LABEL_KEY='offline_income_expense_current_ledger_label_v1';
+const NEXT_LEDGER_NO_KEY='offline_income_expense_next_ledger_no_v1';
+
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBRYaSyYBVugRv28taeTjnWd3QDkq5cA20",
+  authDomain: "daftar-accounts-osama.firebaseapp.com",
+  projectId: "daftar-accounts-osama",
+  storageBucket: "daftar-accounts-osama.firebasestorage.app",
+  messagingSenderId: "1067625863952",
+  appId: "1:1067625863952:web:a6bfabf3b740b618b8e395",
+  measurementId: "G-LRHZJRHKEG"
+};
+const ALLOWED_EMAIL = 'osamaalmaliki55@gmail.com';
+let cloudAuth=null, cloudDb=null, cloudDoc=null, cloudUnsubscribe=null;
+let cloudReady=false, cloudApplyingSnapshot=false, cloudWriteTimer=null;
+function setSyncStatus(text, ok=false){
+ const el=$('syncStatus'); if(!el)return;
+ el.textContent=text; el.style.color=ok?'#08764b':'#52677d';
+ el.style.background=ok?'#e3f6ed':'#fff';
+}
+function initFirebase(){
+ try{
+  if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+  cloudAuth=firebase.auth(); cloudDb=firebase.firestore();
+  cloudDb.enablePersistence({synchronizeTabs:true}).catch(()=>{});
+  cloudAuth.onAuthStateChanged(async user=>{
+   if(!user){cloudReady=false;cloudDoc=null;if(cloudUnsubscribe){cloudUnsubscribe();cloudUnsubscribe=null;}
+    $('googleLoginBtn').style.display='';$('googleLogoutBtn').style.display='none';
+    setSyncStatus('البيانات محفوظة محليًا');return;}
+   if((user.email||'').toLowerCase()!==ALLOWED_EMAIL || !user.emailVerified){
+    await cloudAuth.signOut();alert('يُسمح بالمزامنة للحساب المحدد فقط: '+ALLOWED_EMAIL);return;
+   }
+   $('googleLoginBtn').style.display='none';$('googleLogoutBtn').style.display='';
+   setSyncStatus('جارٍ الاتصال بالمزامنة…');
+   cloudDoc=cloudDb.collection('users').doc(user.uid).collection('ledgers').doc('main');
+   if(cloudUnsubscribe){cloudUnsubscribe();cloudUnsubscribe=null;}
+   try{
+    const snap=await cloudDoc.get();
+    if(snap.exists){
+     const remote=snap.data();
+     const localEntries=Array.isArray(entries)?entries:[];
+     const remoteEntries=Array.isArray(remote.entries)?remote.entries:[];
+     const entryMap=new Map();
+     // Keep remote versions on duplicate IDs, while preserving local-only entries.
+     localEntries.forEach(x=>{if(x&&x.id!=null)entryMap.set(String(x.id),x);});
+     remoteEntries.forEach(x=>{if(x&&x.id!=null)entryMap.set(String(x.id),x);});
+     const localArchives=Array.isArray(archivedLedgers)?archivedLedgers:[];
+     const remoteArchives=Array.isArray(remote.archivedLedgers)?remote.archivedLedgers:[];
+     const archiveMap=new Map();
+     localArchives.forEach(x=>{if(x)archiveMap.set(Number(x.ledgerNo),x);});
+     remoteArchives.forEach(x=>{if(x)archiveMap.set(Number(x.ledgerNo),x);});
+     const merged={
+      ...remote,
+      entries:[...entryMap.values()],
+      archivedLedgers:[...archiveMap.values()],
+      currentLedgerNo:Number(remote.currentLedgerNo)||currentLedgerNo||1,
+      currentLedgerLabel:String(remote.currentLedgerLabel||currentLedgerLabel||''),
+      nextLedgerNo:Math.max(Number(remote.nextLedgerNo)||1,Number(localStorage.getItem(NEXT_LEDGER_NO_KEY))||1)
+     };
+     applyCloudData(merged);
+     await writeCloudNow();
+     setSyncStatus('تم تحميل ومزامنة البيانات مع Google',true);
+    }else{
+     await writeCloudNow();
+     setSyncStatus('تم رفع بيانات هذا الجهاز إلى Google',true);
+    }
+    cloudReady=true;
+    cloudUnsubscribe=cloudDoc.onSnapshot(s=>{
+     if(!s.exists || cloudApplyingSnapshot)return;
+     const d=s.data();
+     // Avoid applying a snapshot generated by our own write when its payload matches local state.
+     if(d.clientTag===getClientTag())return;
+     applyCloudData(d);
+     setSyncStatus('تم تحديث البيانات من جهاز آخر',true);
+    },err=>setSyncStatus('تعذر استقبال التحديثات: '+err.message));
+   }catch(err){setSyncStatus('تعذر الاتصال بالسحابة؛ البيانات المحلية محفوظة');console.error(err);}
+  });
+ }catch(err){setSyncStatus('تعذر تهيئة Firebase');console.error(err);}
+}
+function getClientTag(){
+ let tag=localStorage.getItem('income_expense_client_tag');
+ if(!tag){tag=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random());localStorage.setItem('income_expense_client_tag',tag);}
+ return tag;
+}
+function cloudPayload(){
+ syncCurrentLedgerArchive();
+ return {entries,archivedLedgers,currentLedgerNo,currentLedgerLabel,
+  nextLedgerNo:Number(localStorage.getItem(NEXT_LEDGER_NO_KEY))||1,
+  updatedAt:firebase.firestore.FieldValue.serverTimestamp(),clientTag:getClientTag(),schemaVersion:1};
+}
+async function writeCloudNow(){
+ if(!cloudDoc || !cloudAuth.currentUser)return;
+ await cloudDoc.set(cloudPayload(),{merge:true});
+}
+function scheduleCloudWrite(){
+ if(!cloudAuth || !cloudAuth.currentUser || !cloudDoc || cloudApplyingSnapshot)return;
+ clearTimeout(cloudWriteTimer);
+ setSyncStatus('تم الحفظ محليًا؛ جارٍ رفع التغييرات…');
+ cloudWriteTimer=setTimeout(async()=>{
+  try{await writeCloudNow();setSyncStatus('تمت المزامنة مع Google',true);}
+  catch(err){setSyncStatus('تعذر رفع التغييرات؛ ستظل محليًا');console.error(err);}
+ },700);
+}
+function applyCloudData(data){
+ cloudApplyingSnapshot=true;
+ try{
+  entries=Array.isArray(data.entries)?data.entries:[];
+  archivedLedgers=Array.isArray(data.archivedLedgers)?data.archivedLedgers:[];
+  currentLedgerNo=Number(data.currentLedgerNo)||1;
+  currentLedgerLabel=String(data.currentLedgerLabel||'');
+  localStorage.setItem(KEY,JSON.stringify(entries));
+  localStorage.setItem(LEDGERS_KEY,JSON.stringify(archivedLedgers));
+  localStorage.setItem(CURRENT_LEDGER_KEY,String(currentLedgerNo));
+  localStorage.setItem(CURRENT_LEDGER_LABEL_KEY,currentLedgerLabel);
+  localStorage.setItem(NEXT_LEDGER_NO_KEY,String(Math.max(Number(data.nextLedgerNo)||1,
+   archivedLedgers.reduce((m,l)=>Math.max(m,Number(l.ledgerNo)||0),0)+1,currentLedgerNo+1)));
+  $('ledgerLabelInput').value=currentLedgerLabel;
+  resetForm();renderLedgerArchive();render();
+ }catch(err){console.error(err);setSyncStatus('تعذر تحميل بيانات السحابة');}
+ finally{cloudApplyingSnapshot=false;}
+}
+async function googleLogin(){
+ try{
+  if(!cloudAuth)initFirebase();
+  const provider=new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({login_hint:ALLOWED_EMAIL,prompt:'select_account'});
+  await cloudAuth.signInWithPopup(provider);
+ }catch(err){
+  if(err.code==='auth/popup-blocked'||err.code==='auth/operation-not-supported-in-this-environment'){
+   try{await cloudAuth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());return;}catch(e){err=e;}
+  }
+  alert('تعذر تسجيل الدخول: '+(err.message||err));
+ }
+}
+async function googleLogout(){try{if(cloudAuth)await cloudAuth.signOut();}catch(e){alert('تعذر تسجيل الخروج.');}}
+
+let currentLedgerLabel='';
+let currentLedgerNo=0;
+let entries=[];
+let archivedLedgers=[];
+const $=id=>document.getElementById(id);
+const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+function money(n){return Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function load(){try{const x=localStorage.getItem(KEY);entries=x?JSON.parse(x):[];if(!Array.isArray(entries))entries=[];const a=localStorage.getItem(LEDGERS_KEY);archivedLedgers=a?JSON.parse(a):[];if(!Array.isArray(archivedLedgers))archivedLedgers=[]}catch(e){entries=[];archivedLedgers=[]}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(entries));syncCurrentLedgerArchive();render();scheduleCloudWrite();return true}catch(e){alert('تعذر حفظ البيانات. صدّر نسخة احتياطية واحذف بعض بيانات المتصفح أو جرّب متصفحًا آخر.');return false}}
+function maxLedgerNo(){return archivedLedgers.reduce((m,l)=>Math.max(m,Number(l.ledgerNo)||0),0)}
+function allocateLedgerNo(){let next=Number(localStorage.getItem(NEXT_LEDGER_NO_KEY))||0;next=Math.max(next,maxLedgerNo()+1,currentLedgerNo+1);localStorage.setItem(NEXT_LEDGER_NO_KEY,String(next+1));return next}
+function toggleLedgerArchive(){const p=$('ledgerArchivePanel');p.style.display=p.style.display==='none'?'block':'none';renderLedgerArchive();if(p.style.display==='block')$('archiveSearch').focus()}
+function renderLedgerArchive(){const q=String($('archiveSearch')?.value||'').trim().toLowerCase();const list=[...archivedLedgers].filter(l=>`${l.ledgerNo} ${l.label||''} ${l.name||''} ${l.createdAt||''}`.toLowerCase().includes(q)).sort((a,b)=>Number(b.ledgerNo)-Number(a.ledgerNo));$('archiveCount').textContent=`${list.length} من ${archivedLedgers.length} سجل`;if(!list.length){$('ledgerArchiveList').innerHTML=`<div style="padding:14px;text-align:center;color:#60758a;background:white;border-radius:8px">${archivedLedgers.length?'لا توجد سجلات مطابقة للبحث.':'لا توجد سجلات مؤرشفة بعد. أنشئ سجلًا جديدًا لحفظ السجل الحالي في الأرشيف.'}</div>`;return}$('ledgerArchiveList').innerHTML=list.map(l=>{const isCurrent=Number(l.ledgerNo)===Number(currentLedgerNo);return `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;background:white;border:1px solid ${isCurrent?'#16a34a':'#dce6f0'};border-radius:7px;padding:6px 8px"><div style="min-width:150px;flex:1"><div style="font-size:12px;font-weight:800;color:#173c63">السجل رقم ${Number(l.ledgerNo)} ${isCurrent?'<span style="display:inline-flex;align-items:center;gap:4px;color:#15803d;background:#dcfce7;border-radius:20px;padding:2px 8px;font-size:12px">✓ مفتوح حاليًا</span>':''}</div><div style="font-size:11px;color:#52677d;margin-top:2px">${esc(l.label||l.name||'بدون اسم')} · ${esc((l.createdAt||'').slice(0,10))}</div><div style="font-size:11px;color:#60758a;margin-top:2px">${(l.entries||[]).length} عملية · الرصيد: ${money(l.balance)} EGP</div></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="secondary" style="padding:4px 7px;min-height:26px;font-size:10px" onclick="editArchivedLedgerLabel(${Number(l.ledgerNo)})">✎ تعديل الاسم</button><button type="button" class="secondary" style="padding:4px 7px;min-height:26px;font-size:10px" onclick="openArchivedLedger(${Number(l.ledgerNo)})">${isCurrent?'السجل المفتوح':'فتح السجل'}</button><button type="button" class="danger" style="padding:4px 7px;min-height:26px;font-size:10px" ${isCurrent?'disabled title="لا يمكن حذف السجل المفتوح حاليًا"':''} onclick="deleteArchivedLedger(${Number(l.ledgerNo)})">حذف</button></div></div>`}).join('')}
+function openArchivedLedger(n){$('ledgerNumberInput').value=String(n);openLedgerByNumber()}
+function editArchivedLedgerLabel(n){
+ const item=archivedLedgers.find(l=>Number(l.ledgerNo)===Number(n));
+ if(!item){alert('السجل غير موجود في الأرشيف.');return}
+ const current=String(item.label||item.name||'');
+ const value=prompt(`اكتب اسمًا أو تاريخًا للسجل رقم ${n}:`,current);
+ if(value===null)return;
+ const label=value.trim();
+ if(!label){alert('اكتب اسمًا أو تاريخًا للسجل، أو اضغط إلغاء.');return}
+ item.label=label;item.name=label;
+ if(Number(n)===Number(currentLedgerNo)){currentLedgerLabel=label;$('ledgerLabelInput').value=label;try{localStorage.setItem(CURRENT_LEDGER_LABEL_KEY,label)}catch(e){}}
+ try{localStorage.setItem(LEDGERS_KEY,JSON.stringify(archivedLedgers));renderLedgerArchive();scheduleCloudWrite();alert(`تم حفظ اسم السجل رقم ${n}. رقم السجل لم يتغير.`)}catch(e){alert('تعذر حفظ اسم السجل. حاول مرة أخرى.')}
+}
+function deleteArchivedLedger(n){
+ const idx=archivedLedgers.findIndex(l=>Number(l.ledgerNo)===Number(n));
+ if(idx<0){alert('السجل غير موجود في الأرشيف.');return}
+ if(Number(n)===Number(currentLedgerNo)){alert('لا يمكن حذف السجل المفتوح حاليًا. افتح سجلًا آخر أولًا ثم احذفه من الأرشيف.');return}
+ const item=archivedLedgers[idx];
+ if(!confirm(`تأكيد حذف السجل رقم ${n} (${item.label||item.name||'بدون اسم'})؟\nسيتم حذف جميع عملياته نهائيًا، ولن يتغير رقم أي سجل آخر.`))return;
+ archivedLedgers.splice(idx,1);
+ try{localStorage.setItem(LEDGERS_KEY,JSON.stringify(archivedLedgers));renderLedgerArchive();scheduleCloudWrite();alert(`تم حذف السجل رقم ${n}. رقم السجل لن يُستخدم مرة أخرى.`)}catch(e){alert('تعذر حفظ التغيير. لم يكتمل حذف السجل.')}
+}
+
+function saveCurrentLedgerToArchive(name){
+ const existing=archivedLedgers.findIndex(l=>Number(l.ledgerNo)===Number(currentLedgerNo));
+ const snapshot={id:`ledger-${currentLedgerNo}`,ledgerNo:currentLedgerNo,label:currentLedgerLabel,name:currentLedgerLabel||name||`سجل رقم ${currentLedgerNo}`,createdAt:new Date().toISOString(),balance:ledgerBalance(entries),entries:JSON.parse(JSON.stringify(entries))};
+ if(existing>=0)archivedLedgers[existing]=snapshot;else archivedLedgers.push(snapshot);
+}
+function syncCurrentLedgerArchive(){if(!currentLedgerNo)return;saveCurrentLedgerToArchive(`سجل رقم ${currentLedgerNo}`);try{localStorage.setItem(LEDGERS_KEY,JSON.stringify(archivedLedgers))}catch(e){};if(typeof renderLedgerArchive==='function'&&$('ledgerArchivePanel')&&$('ledgerArchivePanel').style.display!=='none')renderLedgerArchive()}
+function openLedgerByNumber(){
+ const field=$('ledgerNumberInput'), n=Number(field.value);
+ if(!field.value.trim()||!Number.isInteger(n)||n<1){alert('اكتب رقم سجل صحيحًا.');return}
+ if(n===currentLedgerNo){alert(`السجل رقم ${n} مفتوح بالفعل.`);return}
+ const idx=archivedLedgers.findIndex(l=>Number(l.ledgerNo)===n);
+ if(idx<0){alert('لا يوجد سجل محفوظ بهذا الرقم. تأكد من الرقم أو أنشئ سجلًا جديدًا أولًا.');return}
+ const chosen=archivedLedgers[idx];
+ if(!confirm(`فتح السجل رقم ${n} (${chosen.name||'سجل قديم'})؟ سيتم حفظ السجل الحالي برقم ${currentLedgerNo} أولًا.`))return;
+ try{
+  saveCurrentLedgerToArchive(`سجل رقم ${currentLedgerNo}`);
+  const chosenNow=archivedLedgers.findIndex(l=>Number(l.ledgerNo)===n);
+  const selected=archivedLedgers[chosenNow];
+  entries=JSON.parse(JSON.stringify(selected.entries||[]));
+  currentLedgerLabel=String(selected.label||selected.name||'');
+  $('ledgerLabelInput').value=currentLedgerLabel;
+  localStorage.setItem(CURRENT_LEDGER_LABEL_KEY,currentLedgerLabel);
+  currentLedgerNo=n;
+  localStorage.setItem(LEDGERS_KEY,JSON.stringify(archivedLedgers));
+  localStorage.setItem(CURRENT_LEDGER_KEY,String(currentLedgerNo));
+  if(persist()){resetForm();$('monthFilter').value='';$('typeFilter').value='all';$('search').value='';render();field.value='';alert(`تم فتح السجل رقم ${n} بنجاح. رقمه ثابت ولن يتغير.`)}
+ }catch(e){alert('تعذر فتح السجل المحدد.')}
+}
+function ledgerBalance(list){return list.reduce((sum,x)=>sum+(Array.isArray(x.items)&&x.items.length?x.items.reduce((a,it)=>a+((it.type||x.type)==='income'?1:-1)*Number(it.amount||0),0):(x.type==='income'?1:-1)*Number(x.amount||0)),0)}
+function startNewLedger(){
+ const balance=ledgerBalance(entries);
+ const oldNo=currentLedgerNo;
+ if(!confirm(`سيتم حفظ السجل الحالي رقم ${oldNo} (${entries.length} عملية) في الأرشيف وفتح سجل جديد. صافي الرصيد المرحّل: ${money(balance)} EGP. هل تريد المتابعة؟`))return;
+ try{
+  saveCurrentLedgerToArchive(`سجل رقم ${oldNo} — حتى ${today()}`);
+  localStorage.setItem(LEDGERS_KEY,JSON.stringify(archivedLedgers));
+  renderLedgerArchive();
+  currentLedgerNo=allocateLedgerNo();
+  currentLedgerLabel='';$('ledgerLabelInput').value='';
+  localStorage.setItem(CURRENT_LEDGER_LABEL_KEY,'');
+  localStorage.setItem(CURRENT_LEDGER_KEY,String(currentLedgerNo));
+  entries=[];
+  if(Math.abs(balance)>=0.005){
+   const type=balance>=0?'income':'expense', amount=Math.abs(balance), date=today();
+   const description='رصيد مرحّل من السجل السابق';
+   entries.push({id:`opening-${Date.now()}`,type,date,description,items:[{description,amount,date,type}],amount,category:'رصيد افتتاحي',payment:'ترحيل رصيد',notes:'رصيد افتتاحي مرحّل تلقائيًا من السجل السابق'});
+  }
+  if(persist()){
+   resetForm();$('monthFilter').value='';$('typeFilter').value='all';$('search').value='';render();
+   alert(`تم فتح سجل جديد برقم ثابت ${currentLedgerNo} وترحيل صافي الرصيد بنجاح.`);
+  }
+ }catch(err){alert('تعذر فتح سجل جديد. تأكد من توفر مساحة لحفظ البيانات.')}
+}
+function addItem(name='',amount='',date='',type='expense',unit='',qty='',unitPrice=''){const row=document.createElement('div');row.className='item-row';const hasUnit=!!unit;row.innerHTML=`<input class="item-name" maxlength="150" placeholder="اسم البند / البيان" aria-label="اسم البند"><select class="item-unit" aria-label="وحدة القياس" title="وحدة اختيارية"><option value="">بدون</option><option value="عدد">عدد</option><option value="كيلو">كيلو</option><option value="بالة">بالة</option><option value="طن">طن</option></select><input class="item-qty" type="number" min="0.001" step="any" placeholder="الكمية" aria-label="الكمية" style="display:${hasUnit?'block':'none'}"><input class="item-amount" type="number" min="0" step="0.01" placeholder="السعر" aria-label="سعر الوحدة"><input class="item-line-total" type="text" placeholder="الإجمالي" aria-label="إجمالي البند" readonly><input class="item-date" type="date" aria-label="تاريخ البند" title="تاريخ البند"><select class="item-type" aria-label="نوع البند" title="نوع البند"><option value="income">إيراد</option><option value="expense">مصروف</option></select><button type="button" title="حذف البند" aria-label="حذف البند">×</button>`;row.querySelector('.item-name').value=name;row.querySelector('.item-unit').value=unit||'';row.querySelector('.item-qty').value=qty||'';row.querySelector('.item-amount').value=unit? (unitPrice!==''?unitPrice:amount):amount;row.querySelector('.item-date').value=date||today();row.querySelector('.item-type').value=type||'expense';const refresh=()=>{const selected=!!row.querySelector('.item-unit').value;row.querySelector('.item-qty').style.display=selected?'block':'none';if(!selected)row.querySelector('.item-qty').value='';updateRowTotal(row);updateItemsTotal();};row.querySelector('.item-unit').addEventListener('change',refresh);row.querySelector('.item-amount').addEventListener('input',()=>{updateRowTotal(row);updateItemsTotal()});row.querySelector('.item-qty').addEventListener('input',()=>{updateRowTotal(row);updateItemsTotal()});row.querySelector('.item-name').addEventListener('input',updateDescription);row.querySelector('.item-date').addEventListener('change',updateItemsTotal);row.querySelector('.item-type').addEventListener('change',updateItemsTotal);row.querySelector('button').addEventListener('click',()=>{if($('itemsList').children.length<=1){row.querySelector('.item-name').value='';row.querySelector('.item-amount').value='';row.querySelector('.item-qty').value='';row.querySelector('.item-unit').value='';row.querySelector('.item-qty').style.display='none';row.querySelector('.item-date').value=today();row.querySelector('.item-type').value='expense';}else row.remove();updateItemsTotal();updateDescription()});$('itemsList').appendChild(row);updateRowTotal(row);updateItemsTotal()}
+function updateRowTotal(row){const unit=row.querySelector('.item-unit').value;const qty=Number(row.querySelector('.item-qty').value||0);const price=Number(row.querySelector('.item-amount').value||0);const total=unit?qty*price:price;row.querySelector('.item-line-total').value=total.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});row.querySelector('.item-line-total').style.display=unit?'block':'none';}
+function getItems(){return [...document.querySelectorAll('#itemsList .item-row')].map(r=>{const unit=r.querySelector('.item-unit').value;const qty=unit?Number(r.querySelector('.item-qty').value||0):0;const unitPrice=Number(r.querySelector('.item-amount').value||0);return {description:r.querySelector('.item-name').value.trim(),amount:unit?qty*unitPrice:unitPrice,date:r.querySelector('.item-date').value||today(),type:r.querySelector('.item-type').value,unit,quantity:qty,unitPrice:unit?unitPrice:null}}).filter(x=>x.description||x.amount>0)}
+function updateItemsTotal(){const items=getItems();const inc=items.filter(x=>x.type==='income').reduce((s,x)=>s+x.amount,0);const exp=items.filter(x=>x.type==='expense').reduce((s,x)=>s+x.amount,0);$('itemsTotal').textContent='إيراد '+money(inc)+' | مصروف '+money(exp)+' EGP'}
+function updateDescription(){const names=getItems().map(x=>x.description).filter(Boolean);$('description').value=names.join('، ')}
+function resetForm(){ $('entryForm').reset();$('editId').value='';$('date').value=today();$('itemsList').innerHTML='';addItem();$('formTitle').textContent='إضافة عملية جديدة';$('saveBtn').textContent='حفظ العملية';$('description').value=''}
+$('entryForm').addEventListener('submit',e=>{e.preventDefault();const id=$('editId').value;const items=getItems();const validItems=items.filter(x=>x.description&&Number.isFinite(x.amount)&&x.amount>0);if(!validItems.length||validItems.length!==items.length){alert('أدخل اسمًا ومبلغًا صحيحًا أكبر من صفر لكل بند.');return}if(validItems.some(x=>x.unit&&(!Number.isFinite(x.quantity)||x.quantity<=0||!Number.isFinite(x.unitPrice)||x.unitPrice<=0))){alert('أدخل كمية وسعر وحدة صحيحين للبنود التي اخترت لها وحدة قياس.');return}if(validItems.some(x=>!x.date)){alert('اختر تاريخًا لكل بند.');return}const amount=validItems.reduce((s,x)=>s+x.amount,0);
+const description=validItems.map(x=>x.description).join('، ');
+const item={id:id||`${Date.now()}-${Math.random().toString(36).slice(2,8)}`,type:validItems.every(x=>x.type==='income')?'income':validItems.every(x=>x.type==='expense')?'expense':'mixed',date:validItems[0].date||today(),description,items:validItems,amount,category:$('category').value,payment:$('payment').value,notes:$('notes').value.trim()};
+if(!description){alert('يرجى كتابة بيان واحد على الأقل وإدخال مبلغ صحيح لكل بند.');return}
+if(id){const i=entries.findIndex(x=>x.id===id);if(i>=0)entries[i]=item}else entries.push(item);
+if(persist())resetForm()});
+function editEntry(id){const x=entries.find(a=>String(a.id)===String(id));if(!x)return;$('editId').value=x.id;$('date').value=x.date||today();$('category').value=x.category||'عام';$('payment').value=x.payment||'نقدي';$('notes').value=x.notes||'';$('description').value=x.description||'';$('itemsList').innerHTML='';if(Array.isArray(x.items)&&x.items.length){x.items.forEach(it=>addItem(it.description,it.amount,it.date||x.date,it.type||x.type||'expense',it.unit||'',it.quantity||'',it.unitPrice??''))}else{addItem(x.description,x.amount,x.date,x.type||'expense')}$('formTitle').textContent='تعديل عملية';$('saveBtn').textContent='حفظ التعديلات';updateItemsTotal();updateDescription();window.scrollTo({top:0,behavior:'smooth'})}
+function deleteEntry(id){const x=entries.find(a=>a.id===id);if(x&&confirm(`هل تريد حذف عملية "${x.description}" بمبلغ ${money(x.amount)} EGP؟`)){entries=entries.filter(a=>a.id!==id);persist();if($('editId').value===id)resetForm()}}
+function filtered(){const m=$('monthFilter').value,t=$('typeFilter').value,q=$('search').value.trim().toLowerCase();return entries.filter(x=>(!m||((Array.isArray(x.items)&&x.items.length)?x.items.some(it=>(it.date||x.date||'').startsWith(m)):x.date.startsWith(m)))&&(t==='all'||((Array.isArray(x.items)&&x.items.length)?x.items.some(it=>(it.type||x.type)===t):x.type===t))&&(!q||`${x.description} ${x.category||''} ${x.notes||''}`.toLowerCase().includes(q))).sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id))}
+function render(){const all=entries;const inc=all.reduce((s,x)=>s+(Array.isArray(x.items)&&x.items.length?x.items.filter(it=>(it.type||x.type)==='income').reduce((a,it)=>a+Number(it.amount||0),0):(x.type==='income'?Number(x.amount):0)),0);const exp=all.reduce((s,x)=>s+(Array.isArray(x.items)&&x.items.length?x.items.filter(it=>(it.type||x.type)==='expense').reduce((a,it)=>a+Number(it.amount||0),0):(x.type==='expense'?Number(x.amount):0)),0);$('totalIncome').textContent=money(inc)+' EGP';$('totalExpense').textContent=money(exp)+' EGP';$('netBalance').textContent=money(inc-exp)+' EGP';$('netBalance').className='amount '+(inc-exp<0?'red':'blue');$('operationCount').textContent=String(all.length);
+const list=filtered();const fi=list.reduce((s,x)=>s+(Array.isArray(x.items)&&x.items.length?x.items.filter(it=>(it.type||x.type)==='income').reduce((a,it)=>a+Number(it.amount||0),0):(x.type==='income'?Number(x.amount):0)),0);const fe=list.reduce((s,x)=>s+(Array.isArray(x.items)&&x.items.length?x.items.filter(it=>(it.type||x.type)==='expense').reduce((a,it)=>a+Number(it.amount||0),0):(x.type==='expense'?Number(x.amount):0)),0);$('filteredIncome').textContent=money(fi);$('filteredExpense').textContent=money(fe);
+$('records').innerHTML=list.map(x=>{
+const its=(Array.isArray(x.items)&&x.items.length)?x.items:[{description:x.description,amount:Number(x.amount)}];
+const itemLines=its.map(it=>`<div class="item-line"><span class="line-date">${esc(it.date||x.date||'')}</span><span class="pill ${(it.type||x.type)==='income'?'income':(it.type||x.type)==='credit'?'expense':'expense'}">${(it.type||x.type)==='income'?'إيراد':'مصروف'}</span><span class="line-desc">${esc(it.description||x.description)}${it.unit&&it.quantity?` (${esc(it.quantity)} ${esc(it.unit)} × ${money(it.unitPrice??(Number(it.amount)/Number(it.quantity)))})`:''}</span><strong class="line-amount ${(it.type||x.type)==='income'?'green':'red'}">${money(it.amount)}</strong></div>`).join('');
+return `<tr class="transaction-row"><td><span class="pill ${x.type==='income'?'income':x.type==='expense'?'expense':'income'}">${x.type==='mixed'?'متعدد':x.type==='income'?'إيراد':'مصروف'}</span></td><td title="${esc(x.notes||'')}"><div class="item-stack">${itemLines}</div></td><td>${esc(x.category||'عام')}</td><td style="font-weight:700"><div class="item-amount-stack"><div class="item-line item-total" style="direction:ltr;justify-content:flex-start">${money(x.amount)} EGP</div></div></td><td class="no-print"><div class="actions"><button type="button" onclick="editEntry('${x.id}')">تعديل</button><button type="button" class="danger" onclick="deleteEntry('${x.id}')">حذف</button></div></td></tr>`;
+}).join('');
+$('empty').style.display=list.length?'none':'block'}
+
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+$('archiveSearch').addEventListener('input',renderLedgerArchive);
+['monthFilter','typeFilter','search'].forEach(id=>$(id).addEventListener(id==='search'?'input':'change',render));
+function printReport(){const month=$('monthFilter').value;const old=document.title;document.title='تقرير الإيرادات والمصروفات'+(month?' - '+month:'');window.print();document.title=old}
+function download(name,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+function exportBackup(){syncCurrentLedgerArchive();const backupData={app:'دفتر الإيرادات والمصروفات',version:2,currency:'EGP',exportedAt:new Date().toISOString(),entries:JSON.parse(JSON.stringify(entries)),archivedLedgers:JSON.parse(JSON.stringify(archivedLedgers)),currentLedgerNo,currentLedgerLabel,nextLedgerNo:Number(localStorage.getItem(NEXT_LEDGER_NO_KEY))||1};download('backup_income_expenses_'+today()+'.json',JSON.stringify(backupData,null,2),'application/json;charset=utf-8')}
+function restoreBackup(ev){const file=ev.target.files&&ev.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const data=JSON.parse(reader.result);const arr=Array.isArray(data)?data:data.entries;if(!Array.isArray(arr))throw new Error('invalid');const archives=Array.isArray(data.archivedLedgers)?data.archivedLedgers:archivedLedgers;if(!confirm(`سيتم استبدال السجل الحالي بـ ${arr.length} عملية واستعادة ${archives.length} سجلًا من الأرشيف إن وُجد. هل تريد المتابعة؟`))return;entries=arr.map(x=>({...x,id:String(x.id||`${Date.now()}-${Math.random()}`),amount:Number(x.amount)})).filter(x=>x.date&&x.description&&Number.isFinite(x.amount)&&x.amount>0&&['income','expense'].includes(x.type));archivedLedgers=archives.filter(l=>l&&Array.isArray(l.entries)).map(l=>({...l,ledgerNo:Number(l.ledgerNo)||0,entries:l.entries}));currentLedgerNo=Number(data.currentLedgerNo)||currentLedgerNo;currentLedgerLabel=String(data.currentLedgerLabel||'');try{localStorage.setItem(LEDGERS_KEY,JSON.stringify(archivedLedgers));localStorage.setItem(CURRENT_LEDGER_KEY,String(currentLedgerNo));localStorage.setItem(CURRENT_LEDGER_LABEL_KEY,currentLedgerLabel);localStorage.setItem(NEXT_LEDGER_NO_KEY,String(Math.max(Number(data.nextLedgerNo)||1,archivedLedgers.reduce((m,l)=>Math.max(m,Number(l.ledgerNo)||0),0)+1)))}catch(e){}persist();resetForm();renderLedgerArchive();alert('تمت استعادة العمليات وأرشيف السجلات بنجاح.')}catch(e){alert('الملف غير صالح أو ليس نسخة احتياطية متوافقة.')}finally{$('restoreFile').value=''}};reader.readAsText(file)}
+function exportCSV(){const rows=[['التاريخ','النوع','البيان','التصنيف','طريقة الدفع','المبلغ EGP','ملاحظات'],...filtered().map(x=>[x.date,x.type==='income'?'إيراد':'مصروف',x.description,x.category||'عام',x.payment||'نقدي',Number(x.amount).toFixed(2),x.notes||''])];const csv='\uFEFF'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');download('income_expenses_'+today()+'.csv',csv,'text/csv;charset=utf-8')}
+load();
+let archiveMax=archivedLedgers.reduce((m,l)=>Math.max(m,Number(l.ledgerNo)||0),0);
+archivedLedgers.forEach(l=>{if(!Number(l.ledgerNo))l.ledgerNo=++archiveMax;});
+try{localStorage.setItem(LEDGERS_KEY,JSON.stringify(archivedLedgers))}catch(e){}
+currentLedgerNo=Number(localStorage.getItem(CURRENT_LEDGER_KEY))||0;
+currentLedgerLabel=localStorage.getItem(CURRENT_LEDGER_LABEL_KEY)||'';
+if(!Number.isInteger(currentLedgerNo)||currentLedgerNo<1)currentLedgerNo=maxLedgerNo()+1;
+// Keep the active ledger number stable. If an old version left a duplicate archive copy,
+// the active ledger wins and the stale duplicate is removed without renumbering either ledger.
+// Keep the active ledger in the archive so it can be marked with a check instead of disappearing.
+let nextNo=Math.max(Number(localStorage.getItem(NEXT_LEDGER_NO_KEY))||1,maxLedgerNo()+1,currentLedgerNo+1);
+try{localStorage.setItem(CURRENT_LEDGER_KEY,String(currentLedgerNo));localStorage.setItem(CURRENT_LEDGER_LABEL_KEY,currentLedgerLabel);localStorage.setItem(NEXT_LEDGER_NO_KEY,String(nextNo));localStorage.setItem(LEDGERS_KEY,JSON.stringify(archivedLedgers))}catch(e){}
+if($('ledgerLabelInput'))$('ledgerLabelInput').value=currentLedgerLabel;
+// اسم السجل يُحفظ داخليًا؛ خانة التسمية اليدوية مخفية حسب طلب المستخدم.
+
+renderLedgerArchive();
+entries.forEach(e=>{if(Array.isArray(e.items))e.items.forEach(it=>{if(it.type==='credit')it.type='expense';delete it.remaining});if(e.type==='credit')e.type='expense';});
+persist();
+$('date').value=today();addItem();render();
+initFirebase();
+</script>
+</body>
+</html>
